@@ -1,6 +1,6 @@
 # Calculadora Basica
 
-Las cuatro operaciones aritmeticas por consola, sobre `double`.
+Siete operaciones aritmeticas por consola, sobre `double`.
 
 Tenia un defecto que devuelve un valor perfectamente valido de Java y perfectamente inutil como respuesta: **el desborde era silencioso**.
 
@@ -19,6 +19,8 @@ public double multiplicar(double a, double b) {
 | `multiplicar(1e200, 1e200)` | **`Infinity`** | `ArithmeticException` |
 | `sumar(MAX_VALUE, MAX_VALUE)` | **`Infinity`** | `ArithmeticException` |
 | `sumar(Double.NaN, 5)` | **`NaN`** | `IllegalArgumentException` |
+| `potencia(-2, 0.5)` | **`NaN`** | `ArithmeticException` |
+| `raizCuadrada(-1)` | **`NaN`** | `ArithmeticException` |
 
 `Infinity` y `NaN` son valores legitimos de `double`. No lanzan nada, se imprimen sin problema, se guardan en la base de datos sin problema, y **son contagiosos**: cualquier operacion que toque uno devuelve otro. El error aparece a diez capas de distancia del lugar donde se produjo, convertido en un `NaN` sin origen.
 
@@ -35,6 +37,14 @@ if (b == 0) throw new ArithmeticException("No se puede dividir entre cero");
 ```
 
 Esa comparacion atrapa tambien `-0.0`, porque el operador `==` los considera iguales aunque sean dos valores distintos con dos representaciones binarias distintas. Convenientemente: sin ella, `1 / -0.0` daria `-Infinity` en vez de `Infinity`. Dos formas distintas de estar mal.
+
+## Las tres operaciones nuevas
+
+**Potencia** usa `Math.pow`, que tiene su propia coleccion de casos especiales de IEEE 754. El mas interesante: `Math.pow(-2, 0.5)` devuelve `NaN` sin avisar, porque la raiz cuadrada de un negativo no es real. Esta calculadora lo atrapa y lanza excepcion en vez de propagar un `NaN` silencioso.
+
+**Raiz cuadrada** rechaza numeros negativos explicitamente. Sin esa comprobacion, `Math.sqrt(-1)` devolveria `NaN` — otro error diferido.
+
+**Modulo** usa el operador `%` de Java, que conserva el signo del dividendo: `-10 % 3` es `-1`, no `2`. La division entre cero con `%` en `double` no lanza excepcion sino que devuelve `NaN`, asi que hay que comprobar antes.
 
 ## Lo que esta clase no puede arreglar
 
@@ -83,13 +93,16 @@ Aparecio porque `multiplicar(0, -1)` devuelve `-0.0` — la multiplicacion conse
 
 La consecuencia practica es que **agregarle un `delta` de `0.0` a un `assertEquals` no es redundante: cambia la semantica**, porque la sobrecarga de tres argumentos compara `Math.abs(esperado - real) <= delta`, que es aritmetica y no bits. Las pruebas de propiedades lo usan a proposito, con un comentario que explica por que.
 
-## Las 14 pruebas
+## Las 21 pruebas
 
 | grupo | que cubre |
 |---|---|
-| Operaciones | Las cuatro con enteros, negativos y cero |
+| Operaciones basicas | Las cuatro con enteros, negativos y cero |
 | Division entre cero | Incluido `-0.0`, con la comprobacion de que son valores distintos |
 | **Desborde** | El defecto corregido en las cuatro operaciones; lo que si cabe no se rechaza; `NaN` e infinitos de entrada |
+| Potencia | Casos basicos (incluido `0^0`); desborde; base negativa con exponente fraccionario |
+| Raiz cuadrada | Cuadrados perfectos, cero, irracionales; rechazo de negativos |
+| Modulo | Signo del dividendo; divisor cero incluido `-0.0` |
 | Punto flotante | `0.1+0.2`; no asociatividad; cancelacion catastrofica; 2^53; subdesborde |
 | Propiedades | Exactitud con enteros chicos (10201 casos); conmutatividad; restar = sumar el opuesto |
 | Sobre JUnit | Las tres semanticas de igualdad de `double` |
@@ -98,10 +111,10 @@ La consecuencia practica es que **agregarle un `delta` de `0.0` a un `assertEqua
 
 ```
 src/main/java/com/fernando/calculadora/
-├── Calculadora.java   Las cuatro operaciones y la deteccion de desborde.
+├── Calculadora.java   Siete operaciones y la deteccion de desborde.
 └── Main.java          Solo lee del teclado y escribe en pantalla.
 src/test/java/com/fernando/calculadora/
-└── CalculadoraTest.java   14 pruebas.
+└── CalculadoraTest.java   21 pruebas.
 ```
 
 El menu imprime el resultado con `System.out.println` y no con `%.4f`: redondear a cuatro decimales escondería justamente lo que este proyecto quiere mostrar.
