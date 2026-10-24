@@ -95,6 +95,71 @@ public class Calculadora {
     }
 
     /**
+     * Eleva {@code base} a la potencia {@code exponente} usando {@link Math#pow}.
+     *
+     * <p>{@code Math.pow} tiene su propia coleccion de casos especiales definidos
+     * por IEEE 754: {@code pow(0, 0)} es {@code 1.0}, {@code pow(-1, Infinity)}
+     * es {@code 1.0}, y {@code pow(-2, 0.5)} es {@code NaN} porque la raiz
+     * cuadrada de un negativo no es real. Este metodo valida las entradas y deja
+     * que {@code Math.pow} resuelva la combinatoria, pero atrapa cualquier
+     * resultado no finito como desborde.
+     *
+     * @return {@code base}<sup>{@code exponente}</sup>
+     * @throws IllegalArgumentException si alguna entrada no es finita
+     * @throws ArithmeticException      si el resultado desborda o no es un numero real
+     */
+    public double potencia(double base, double exponente) {
+        validar(base);
+        validar(exponente);
+        double resultado = Math.pow(base, exponente);
+        if (Double.isNaN(resultado)) {
+            throw new ArithmeticException(
+                    "La potencia no tiene resultado real (base=" + base
+                            + ", exponente=" + exponente + ")");
+        }
+        return comprobar(resultado, "potencia");
+    }
+
+    /**
+     * Raiz cuadrada de {@code x}.
+     *
+     * <p>Solo acepta valores no negativos: la raiz de un negativo no es real y
+     * {@code Math.sqrt} devolveria {@code NaN} sin avisar, que es exactamente
+     * la clase de error silencioso que esta calculadora quiere evitar.
+     *
+     * @return la raiz cuadrada de {@code x}
+     * @throws IllegalArgumentException si {@code x} no es finito o es negativo
+     */
+    public double raizCuadrada(double x) {
+        validar(x);
+        if (x < 0) {
+            throw new ArithmeticException(
+                    "No se puede calcular la raiz cuadrada de un numero negativo: " + x);
+        }
+        return Math.sqrt(x);
+    }
+
+    /**
+     * Resto de la division entera de {@code a} entre {@code b}.
+     *
+     * <p>Usa el operador {@code %} de Java, que conserva el signo del dividendo.
+     * Dividir entre cero con {@code %} en {@code double} no lanza excepcion
+     * sino que devuelve {@code NaN}, asi que hay que comprobarlo antes.
+     *
+     * @return {@code a % b}
+     * @throws IllegalArgumentException si alguna entrada no es finita
+     * @throws ArithmeticException      si {@code b} es cero
+     */
+    public double modulo(double a, double b) {
+        validar(a);
+        validar(b);
+        if (b == 0) {
+            throw new ArithmeticException("No se puede calcular el modulo con divisor cero");
+        }
+        return a % b;
+    }
+
+    /**
      * Comprueba que un operando sea un numero real utilizable.
      *
      * <p>{@code Double.isFinite} cubre de una sola vez {@code NaN},

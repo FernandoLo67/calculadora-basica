@@ -160,6 +160,69 @@ class CalculadoraTest {
     }
 
     // ---------------------------------------------------------------
+    //  Potencia, raiz cuadrada y modulo
+    // ---------------------------------------------------------------
+
+    @Test
+    void potenciaConCasosBasicos() {
+        assertEquals(8.0, calculadora.potencia(2, 3));
+        assertEquals(1.0, calculadora.potencia(5, 0));
+        assertEquals(0.25, calculadora.potencia(2, -2));
+        assertEquals(1.0, calculadora.potencia(0, 0),
+                "Math.pow define 0^0 como 1.0, por convencion");
+    }
+
+    @Test
+    void potenciaDetectaDesborde() {
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.potencia(10, 309));
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.potencia(-10, 309));
+    }
+
+    /**
+     * {@code Math.pow(-2, 0.5)} es la raiz cuadrada de {@code -2}, que no
+     * existe en los reales. {@code Math.pow} devuelve {@code NaN} sin avisar;
+     * esta calculadora lo atrapa.
+     */
+    @Test
+    void potenciaDeBaseNegativaConExponenteFraccionarioNoEsReal() {
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.potencia(-2, 0.5));
+    }
+
+    @Test
+    void raizCuadradaConCasosBasicos() {
+        assertEquals(3.0, calculadora.raizCuadrada(9));
+        assertEquals(0.0, calculadora.raizCuadrada(0));
+        assertEquals(1.4142135623730951, calculadora.raizCuadrada(2));
+    }
+
+    @Test
+    void raizCuadradaDeNegativoLanzaExcepcion() {
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.raizCuadrada(-1));
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.raizCuadrada(-0.001));
+    }
+
+    @Test
+    void moduloConCasosBasicos() {
+        assertEquals(1.0, calculadora.modulo(10, 3));
+        assertEquals(0.0, calculadora.modulo(10, 5));
+        assertEquals(-1.0, calculadora.modulo(-10, 3),
+                "el operador % de Java conserva el signo del dividendo");
+    }
+
+    @Test
+    void moduloEntreCeroLanzaExcepcion() {
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.modulo(10, 0));
+        assertThrows(ArithmeticException.class,
+                () -> calculadora.modulo(10, -0.0));
+    }
+
+    // ---------------------------------------------------------------
     //  Punto flotante: hechos del tipo, no defectos de la clase
     // ---------------------------------------------------------------
 
